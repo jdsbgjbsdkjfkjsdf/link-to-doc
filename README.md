@@ -8,7 +8,9 @@ Each new item in the doc looks like:
 - *&lt;ONE-LINE SUMMARY&gt;* (italic subheadline)
 - &lt;URL&gt; (clickable)
 
-Checkbox items in Google Doc with title + 1-line summary + URL. Checking the box is manual; appends don’t update previous entries.
+Checkbox items in Google Doc with title + 1-line summary + URL. Each entry is one paragraph (soft line breaks), so when you check the box, strikethrough applies to the **entire** entry (title, summary, and URL). Checking the box is manual; appends don’t update previous entries.
+
+The **Articles Read** counter on the app shows how many entries you’ve checked. “Read” is defined as a checked checkbox title line: a list item (bullet/listId) whose text is title-style (bold) and **fully** strikethrough. Random strikethrough or partial strikes elsewhere are not counted.
 
 ## Local development
 

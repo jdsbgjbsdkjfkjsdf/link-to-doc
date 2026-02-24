@@ -1,11 +1,12 @@
 /**
  * Build documents.batchUpdate requests for appending a checkbox item:
  * [ ] TITLE
- * summary (italic)
- * url
+ *     summary (italic)
+ *     url (link)
  *
- * Only the TITLE line is a checkbox; summary is italic subheadline; URL is a link.
- * Block is prefixed with one newline and ends with \n\n for exactly one blank line between entries.
+ * The whole block is ONE paragraph (soft line breaks between lines) so that when
+ * the checkbox is checked, strikethrough applies to the entire entry, not just the title.
+ * Block is prefixed with \n and ends with \n\n for exactly one blank line between entries.
  */
 
 export type AppendBlock = {
@@ -15,12 +16,14 @@ export type AppendBlock = {
 };
 
 const PREFIX = "\n";
+/** Soft line break (Shift+Enter) — same paragraph, so checkbox strikethrough covers all lines. */
+const LINE_BREAK = "\u000b";
 
 /**
  * Compute request payload for batchUpdate. insertionIndex is the 1-based index
  * where we insert (before the doc's final newline). Returns the array of requests
  * and the inserted text length.
- * Text = "\n" + title + "\n" + summary + "\n" + url + "\n\n" (one blank line between entries).
+ * Text = "\n" + title + softBreak + summary + softBreak + url + "\n\n".
  */
 export function buildAppendRequests(
   insertionIndex: number,
@@ -29,21 +32,18 @@ export function buildAppendRequests(
 ): { requests: object[]; insertedLength: number } {
   const { title, summary, url } = block;
 
-  const titleLine = `${title}\n`;
-  const summaryLine = `${summary}\n`;
-  const urlLine = `${url}\n\n`;
-  const text = PREFIX + titleLine + summaryLine + urlLine;
+  const text =
+    PREFIX + title + LINE_BREAK + summary + LINE_BREAK + url + "\n\n";
   const insertedLength = text.length;
 
   const titleStart = insertionIndex + PREFIX.length;
-  const titleEnd = titleStart + title.length + 1;
-  const titleTextEndNoNl = titleStart + title.length;
-
-  const summaryStart = titleEnd;
+  const titleEnd = titleStart + title.length;
+  const summaryStart = titleEnd + LINE_BREAK.length;
   const summaryEnd = summaryStart + summary.length;
-
-  const urlStart = titleEnd + summaryLine.length;
+  const urlStart = summaryEnd + LINE_BREAK.length;
   const urlEnd = urlStart + url.length;
+
+  const blockEnd = urlEnd;
 
   const requests: object[] = [
     {
@@ -54,13 +54,13 @@ export function buildAppendRequests(
     },
     {
       createParagraphBullets: {
-        range: { startIndex: titleStart, endIndex: titleEnd },
+        range: { startIndex: titleStart, endIndex: blockEnd },
         bulletPreset,
       },
     },
     {
       updateTextStyle: {
-        range: { startIndex: titleStart, endIndex: titleTextEndNoNl },
+        range: { startIndex: titleStart, endIndex: titleEnd },
         textStyle: { bold: true },
         fields: "bold",
       },

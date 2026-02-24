@@ -1,12 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const POLL_INTERVAL_MS = 10_000;
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+  const [articlesRead, setArticlesRead] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const res = await fetch("/api/read-count");
+        const data = await res.json();
+        if (res.ok && data.ok && typeof data.count === "number") {
+          setArticlesRead(data.count);
+        }
+      } catch {
+        // ignore poll errors
+      }
+    }
+    fetchCount();
+    const id = setInterval(fetchCount, POLL_INTERVAL_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchCount();
+    };
+    const onFocus = () => fetchCount();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +59,11 @@ export default function Home() {
       setUrl("");
       setNote("");
       setStatus({ type: "ok", msg: "Added to Google Doc ✅" });
+      const countRes = await fetch("/api/read-count");
+      const countData = await countRes.json();
+      if (countRes.ok && countData.ok && typeof countData.count === "number") {
+        setArticlesRead(countData.count);
+      }
     } catch (err: any) {
       setStatus({ type: "err", msg: err?.message || "Something went wrong" });
     } finally {
@@ -37,9 +72,17 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-xl border rounded-xl p-6">
-        <h1 className="text-2xl font-semibold">Reading List</h1>
+        <div className="flex items-baseline justify-between gap-4">
+          <h1 className="text-2xl font-semibold">Reading List</h1>
+          <p className="text-sm tabular-nums text-neutral-600">
+            Articles Read:{" "}
+            <span className="font-medium underline decoration-neutral-400 decoration-2 underline-offset-2">
+              {articlesRead ?? "—"}
+            </span>
+          </p>
+        </div>
         <p className="text-sm opacity-80 mt-1">
           Paste a link and it will append to your Google Doc.
         </p>
