@@ -4,11 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:3001": "npm run check:env && next dev -p 3001",
+    "dev:3002": "npm run check:env && next dev -p 3002",
+    "dev:any": "next dev -p 0",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "check:env": "ts-node scripts/check-env.ts"
+    "check:env": "tsx scripts/check-env.ts",
+    "setup:env": "bash scripts/setup-env.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
@@ -26,7 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }

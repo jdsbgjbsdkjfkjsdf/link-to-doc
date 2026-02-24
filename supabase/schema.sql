@@ -1,5 +1,5 @@
--- Reading Inbox: links table
--- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New query).
+-- Run this entire file in Supabase SQL Editor before using the app.
+-- Reading Inbox: links table (Dashboard → SQL Editor → New query).
 
 create table if not exists public.links (
   id uuid primary key default gen_random_uuid(),

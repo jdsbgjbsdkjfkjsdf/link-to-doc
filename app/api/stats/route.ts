@@ -5,16 +5,18 @@ export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
 
-    const [unreadRes, readRes] = await Promise.all([
+    const [unreadRes, readRes, todayRes] = await Promise.all([
       supabase.from("links").select("id", { count: "exact", head: true }).eq("is_read", false),
       supabase.from("links").select("id", { count: "exact", head: true }).eq("is_read", true),
+      supabase.from("links").select("id", { count: "exact", head: true }).eq("is_today", true),
     ]);
 
     const unreadCount = unreadRes.count ?? 0;
     const readCount = readRes.count ?? 0;
+    const todayCount = todayRes.count ?? 0;
 
-    if (unreadRes.error || readRes.error) {
-      const err = unreadRes.error || readRes.error;
+    if (unreadRes.error || readRes.error || todayRes.error) {
+      const err = unreadRes.error || readRes.error || todayRes.error;
       console.error("stats error", err);
       return NextResponse.json(
         { ok: false, error: err?.message || "Fetch failed" },
@@ -26,6 +28,7 @@ export async function GET() {
       ok: true,
       unreadCount,
       readCount,
+      todayCount,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Server error";

@@ -10,6 +10,8 @@ export type LinkRow = {
   is_read: boolean;
   created_at: string;
   read_at: string | null;
+  is_today: boolean;
+  today_rank: number | null;
 };
 
 /** Insert payload (id optional, created_at/read_at optional) */
