@@ -29,7 +29,15 @@ export type UrlMetadata = {
   hostname: string;
 };
 
+export type UrlMetadataWithHtml = UrlMetadata & { html?: string };
+
 export async function fetchUrlMetadata(url: string): Promise<UrlMetadata> {
+  const result = await fetchUrlMetadataWithHtml(url);
+  return { title: result.title, description: result.description, hostname: result.hostname };
+}
+
+/** Like fetchUrlMetadata but also returns raw HTML when fetch succeeds (for read-time calculation). */
+export async function fetchUrlMetadataWithHtml(url: string): Promise<UrlMetadataWithHtml> {
   const hostname = (() => {
     try {
       return new URL(url).hostname;
@@ -60,7 +68,7 @@ export async function fetchUrlMetadata(url: string): Promise<UrlMetadata> {
         ? (ogDesc || metaDesc || "").trim()
         : "";
 
-    return { title, description, hostname };
+    return { title, description, hostname, html };
   } catch {
     return {
       title: hostname,

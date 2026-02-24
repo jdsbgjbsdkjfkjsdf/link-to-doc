@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "link-to-doc",
-  description: "Paste a link and it appends to your Google Doc.",
+  title: "Reading Inbox",
+  description: "Save links, track read/unread, and manage your reading list.",
 };
 
 export default function RootLayout({
