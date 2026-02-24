@@ -2,17 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import type { HealthPayload } from "@/lib/health-types";
 
 type SetupInfo = {
   ok: boolean;
   missingEnv: string[];
   schemaSql: string;
-  health: {
-    ok: boolean;
-    error?: string;
-    db?: { ok: boolean };
-    env?: { hasSupabaseUrl: boolean; hasAnonKey: boolean; hasServiceRoleKey: boolean };
-  };
+  health: HealthPayload | null;
 };
 
 const REQUIRED_KEYS = [
@@ -95,12 +91,14 @@ SUPABASE_SERVICE_ROLE_KEY=<paste service_role key here>`;
 
   const { missingEnv, schemaSql, health } = info;
   const envOk = missingEnv.length === 0;
-  const dbOk = health.db?.ok ?? false;
-  const allOk = health.ok === true;
+  const dbOk = health?.db?.ok ?? false;
+  const allOk = health?.ok === true;
+  const details =
+    health && !health.ok && "details" in health ? health.details ?? "" : "";
   const tableNotFound =
     !dbOk &&
-    (String(health.error ?? "").toLowerCase().includes("could not find the table") ||
-      String(health.details ?? "").toLowerCase().includes("could not find the table"));
+    (String(health?.ok === false ? health.error ?? "" : "").toLowerCase().includes("could not find the table") ||
+      details.toLowerCase().includes("could not find the table"));
 
   return (
     <main className="min-h-screen bg-neutral-50 p-6">
@@ -236,10 +234,10 @@ SUPABASE_SERVICE_ROLE_KEY=<paste service_role key here>`;
           <div className="space-y-2 text-sm">
             <p>
               Health:{" "}
-              {health.ok ? (
+              {health?.ok ? (
                 <span className="font-medium text-emerald-700">ok</span>
               ) : (
-                <span className="text-red-600">{health.error ?? "error"}</span>
+                <span className="text-red-600">{health && !health.ok ? health.error ?? "error" : "—"}</span>
               )}
             </p>
             <p>

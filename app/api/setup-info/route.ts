@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import { join } from "path";
+import type { HealthPayload } from "@/lib/health-types";
 import { getMissingSupabaseEnv } from "@/lib/supabase";
 import { getHealthPayload } from "@/lib/health";
 
@@ -14,7 +15,7 @@ export async function GET() {
     } catch {
       schemaSql = "-- supabase/schema.sql not found";
     }
-    const health = await getHealthPayload();
+    const health: HealthPayload = await getHealthPayload();
 
     return NextResponse.json({
       ok: true,

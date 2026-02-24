@@ -2,26 +2,14 @@
  * Shared health check logic. Returns payload for /api/health and /api/setup-info.
  */
 
+import type { HealthPayload } from "@/lib/health-types";
 import {
   getSupabaseAdmin,
   getMissingSupabaseEnv,
   REQUIRED_SUPABASE_ENV,
 } from "@/lib/supabase";
 
-export type HealthPayload = {
-  ok: boolean;
-  error?: string;
-  required?: readonly string[];
-  hint?: string;
-  details?: string;
-  db?: { ok: boolean };
-  openai?: { configured: boolean };
-  env?: {
-    hasSupabaseUrl: boolean;
-    hasAnonKey: boolean;
-    hasServiceRoleKey: boolean;
-  };
-};
+export type { HealthPayload } from "@/lib/health-types";
 
 export async function getHealthPayload(): Promise<HealthPayload> {
   const env = {
@@ -41,7 +29,7 @@ export async function getHealthPayload(): Promise<HealthPayload> {
     return {
       ok: false,
       error: errorMsg,
-      required: [...REQUIRED_SUPABASE_ENV],
+      required: [...REQUIRED_SUPABASE_ENV] as string[],
       hint: "Create a .env.local file in the project root and restart npm run dev.",
       env,
       openai,
@@ -74,5 +62,5 @@ export async function getHealthPayload(): Promise<HealthPayload> {
     };
   }
 
-  return { ok: true, db, openai, env };
+  return { ok: true, db: { ok: true }, openai, env };
 }
