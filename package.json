@@ -2,12 +2,15 @@
   "name": "link-to-doc",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:3001": "npm run check:env && next dev -p 3001",
     "dev:3002": "npm run check:env && next dev -p 3002",
     "dev:any": "next dev -p 0",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
