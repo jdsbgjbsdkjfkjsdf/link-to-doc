@@ -1,6 +1,14 @@
 # link-to-doc
 
-Paste a link and it appends to your Google Doc (with optional note). Built with Next.js.
+Paste a link and it appends to your Google Doc as a **checkbox item** (TODO-style): title (bold, checkbox), one-line summary, and URL (as a link). Built with Next.js.
+
+Each new item in the doc looks like:
+
+- **☐ &lt;TITLE&gt;** (checkbox line — check off when read)
+- *&lt;ONE-LINE SUMMARY&gt;* (italic subheadline)
+- &lt;URL&gt; (clickable)
+
+Checkbox items in Google Doc with title + 1-line summary + URL. Checking the box is manual; appends don’t update previous entries.
 
 ## Local development
 
@@ -61,5 +69,21 @@ The app will listen on port 3000 (or `PORT` if set). For production env vars loc
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Yes | JSON key for a service account with access to the Doc (single-line string). |
 | `GOOGLE_DOC_ID` | Yes | ID of the Google Doc (from the URL: `.../d/<GOOGLE_DOC_ID>/edit`). |
 | `TZ` | No | Timezone for timestamps (default: `America/New_York`). |
+| `OPENAI_API_KEY` | No | If set, used to generate a one-line summary when the page has no or useless meta description. |
+| `OPENAI_MODEL` | No | Model for summary (default: `gpt-4o-mini`). |
+
+### Usage
+
+1. Run the app and open the form.
+2. Paste a URL and submit. The app fetches the page, extracts title (og:title or `<title>`) and description (og:description or meta description), optionally generates a summary with OpenAI if needed, and appends a checkbox block to your Google Doc.
+3. **Dry run**: `POST /api/append` with body `{ "url": "https://example.com", "dryRun": true }` to see the computed `batchUpdate` payload without writing to the doc.
+
+### Example output in the Doc
+
+```
+☐ Example Article Title
+A concise one-line summary of the page.
+https://example.com/article
+```
 
 Enable the **Google Docs API** for your Google Cloud project and share the Doc with the service account email (e.g. `...@...iam.gserviceaccount.com`) as an editor.
