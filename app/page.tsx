@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { InstallPrompt } from "./install-prompt";
 
 type LinkItem = {
   id: string;
@@ -11,8 +12,8 @@ type LinkItem = {
   is_read: boolean;
   read_time_minutes: number | null;
   created_at: string;
-  is_today: boolean;
-  today_rank: number | null;
+  is_long_read: boolean;
+  long_read_rank: number | null;
 };
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -29,7 +30,7 @@ function formatDate(iso: string): string {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<"unread" | "read" | "today">("unread");
+  const [tab, setTab] = useState<"unread" | "read" | "longreads">("unread");
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
   const [addUrl, setAddUrl] = useState("");
@@ -40,7 +41,7 @@ export default function Home() {
   const [stats, setStats] = useState<{
     unreadCount: number;
     readCount: number;
-    todayCount: number;
+    longReadCount: number;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [status, setStatus] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
@@ -83,7 +84,7 @@ export default function Home() {
         setStats({
           unreadCount: data.unreadCount ?? 0,
           readCount: data.readCount ?? 0,
-          todayCount: data.todayCount ?? 0,
+          longReadCount: data.longReadCount ?? 0,
         });
       }
     } catch {
@@ -98,8 +99,8 @@ export default function Home() {
     setLinksError(null);
     try {
       const params = new URLSearchParams();
-      if (tab === "today") {
-        params.set("is_today", "true");
+      if (tab === "longreads") {
+        params.set("is_long_read", "true");
       } else {
         params.set("is_read", tab === "read" ? "true" : "false");
       }
@@ -158,7 +159,7 @@ export default function Home() {
   }
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [todayId, setTodayId] = useState<string | null>(null);
+  const [longReadId, setLongReadId] = useState<string | null>(null);
   const [moveId, setMoveId] = useState<string | null>(null);
 
   async function handleToggle(link: LinkItem) {
@@ -192,27 +193,27 @@ export default function Home() {
     }
   }
 
-  async function handleToday(link: LinkItem, add: boolean) {
-    setTodayId(link.id);
+  async function handleLongRead(link: LinkItem, add: boolean) {
+    setLongReadId(link.id);
     try {
-      const res = await fetch(`/api/links/${link.id}/today`, {
+      const res = await fetch(`/api/links/${link.id}/long-read`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_today: add }),
+        body: JSON.stringify({ is_long_read: add }),
       });
       const data = await res.json();
       if (res.ok && data.ok) {
         await Promise.all([fetchLinks(), fetchStats()]);
       }
     } finally {
-      setTodayId(null);
+      setLongReadId(null);
     }
   }
 
-  async function handleTodayMove(link: LinkItem, direction: "up" | "down") {
+  async function handleLongReadMove(link: LinkItem, direction: "up" | "down") {
     setMoveId(link.id);
     try {
-      const res = await fetch(`/api/links/${link.id}/today-move`, {
+      const res = await fetch(`/api/links/${link.id}/long-read-move`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ direction }),
@@ -248,6 +249,7 @@ export default function Home() {
         </div>
       )}
       <div className="mx-auto max-w-2xl">
+        <InstallPrompt />
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold text-neutral-900">Reading Inbox</h1>
@@ -265,9 +267,9 @@ export default function Home() {
               </div>
             </div>
             <div className="rounded-full bg-sky-100 px-4 py-2 text-center">
-              <span className="text-xs font-medium text-sky-800">Today</span>
+              <span className="text-xs font-medium text-sky-800">Long Reads</span>
               <div className="text-xl font-bold tabular-nums text-sky-900">
-                {statsLoading ? "—" : (stats?.todayCount ?? 0)}
+                {statsLoading ? "—" : (stats?.longReadCount ?? 0)}
               </div>
             </div>
           </div>
@@ -321,12 +323,12 @@ export default function Home() {
           </button>
           <button
             type="button"
-            onClick={() => setTab("today")}
+            onClick={() => setTab("longreads")}
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium ${
-              tab === "today" ? "bg-white text-neutral-900 shadow" : "text-neutral-600"
+              tab === "longreads" ? "bg-white text-neutral-900 shadow" : "text-neutral-600"
             }`}
           >
-            Today
+            Long Reads
           </button>
         </div>
 
@@ -354,7 +356,7 @@ export default function Home() {
               ? "No unread links."
               : tab === "read"
                 ? "No read links."
-                : "No links in Today. Add from Unread or Read."}
+                : "No long reads. Add from Unread or Read."}
           </p>
         ) : (
           <ul className="space-y-3">
@@ -406,21 +408,21 @@ export default function Home() {
                           ? "Mark unread"
                           : "Mark read"}
                     </button>
-                    {tab !== "today" ? (
+                    {tab !== "longreads" ? (
                       <button
                         type="button"
-                        disabled={todayId === link.id}
-                        onClick={() => handleToday(link, !link.is_today)}
+                        disabled={longReadId === link.id}
+                        onClick={() => handleLongRead(link, !link.is_long_read)}
                         className="rounded-md border border-sky-300 px-3 py-1.5 text-sm font-medium text-sky-700 hover:bg-sky-50 disabled:opacity-50"
                       >
-                        {todayId === link.id ? "…" : link.is_today ? "Remove from Today" : "Add to Today"}
+                        {longReadId === link.id ? "…" : link.is_long_read ? "Remove from Long Reads" : "Add to Long Reads"}
                       </button>
                     ) : (
                       <>
                         <button
                           type="button"
                           disabled={moveId === link.id}
-                          onClick={() => handleTodayMove(link, "up")}
+                          onClick={() => handleLongReadMove(link, "up")}
                           className="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 disabled:opacity-50"
                           title="Move up"
                           aria-label="Move up"
@@ -430,7 +432,7 @@ export default function Home() {
                         <button
                           type="button"
                           disabled={moveId === link.id}
-                          onClick={() => handleTodayMove(link, "down")}
+                          onClick={() => handleLongReadMove(link, "down")}
                           className="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 disabled:opacity-50"
                           title="Move down"
                           aria-label="Move down"
@@ -439,11 +441,11 @@ export default function Home() {
                         </button>
                         <button
                           type="button"
-                          disabled={todayId === link.id}
-                          onClick={() => handleToday(link, false)}
+                          disabled={longReadId === link.id}
+                          onClick={() => handleLongRead(link, false)}
                           className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-50 disabled:opacity-50"
                         >
-                          {todayId === link.id ? "…" : "Remove from Today"}
+                          {longReadId === link.id ? "…" : "Remove from Long Reads"}
                         </button>
                       </>
                     )}

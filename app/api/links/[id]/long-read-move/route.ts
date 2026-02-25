@@ -25,34 +25,34 @@ export async function POST(
 
     const { data: current, error: currErr } = await supabase
       .from("links")
-      .select("id, today_rank")
+      .select("id, long_read_rank")
       .eq("id", id)
-      .eq("is_today", true)
+      .eq("is_long_read", true)
       .single();
 
     if (currErr || !current) {
       return NextResponse.json(
-        { ok: false, error: "Link not in Today or not found" },
+        { ok: false, error: "Link not in Long Reads or not found" },
         { status: 404 }
       );
     }
 
-    const currentRank = current.today_rank as number;
+    const currentRank = current.long_read_rank as number;
     const isUp = direction === "up";
 
     const neighbourQuery = supabase
       .from("links")
-      .select("id, today_rank")
-      .eq("is_today", true);
+      .select("id, long_read_rank")
+      .eq("is_long_read", true);
     const { data: neighbour } = isUp
       ? await neighbourQuery
-          .lt("today_rank", currentRank)
-          .order("today_rank", { ascending: false })
+          .lt("long_read_rank", currentRank)
+          .order("long_read_rank", { ascending: false })
           .limit(1)
           .maybeSingle()
       : await neighbourQuery
-          .gt("today_rank", currentRank)
-          .order("today_rank", { ascending: true })
+          .gt("long_read_rank", currentRank)
+          .order("long_read_rank", { ascending: true })
           .limit(1)
           .maybeSingle();
 
@@ -60,11 +60,11 @@ export async function POST(
       return NextResponse.json({ ok: true, link: current });
     }
 
-    const neighbourRank = neighbour.today_rank as number;
+    const neighbourRank = neighbour.long_read_rank as number;
     const neighbourId = neighbour.id;
 
-    await supabase.from("links").update({ today_rank: neighbourRank }).eq("id", id);
-    await supabase.from("links").update({ today_rank: currentRank }).eq("id", neighbourId);
+    await supabase.from("links").update({ long_read_rank: neighbourRank }).eq("id", id);
+    await supabase.from("links").update({ long_read_rank: currentRank }).eq("id", neighbourId);
 
     const { data: updated } = await supabase
       .from("links")
@@ -78,7 +78,7 @@ export async function POST(
     if (msg.includes("Missing required environment variable")) {
       return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-    console.error("POST /api/links/[id]/today-move", err);
+    console.error("POST /api/links/[id]/long-read-move", err);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }

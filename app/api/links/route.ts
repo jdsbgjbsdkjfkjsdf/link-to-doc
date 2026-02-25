@@ -119,14 +119,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const isReadParam = searchParams.get("is_read");
-    const isTodayParam = searchParams.get("is_today");
+    const isLongReadParam = searchParams.get("is_long_read");
     const query = searchParams.get("query")?.trim() || "";
 
     const supabase = getSupabaseAdmin();
     let q = supabase.from("links").select("*");
 
-    if (isTodayParam === "true") {
-      q = q.eq("is_today", true).order("today_rank", { ascending: true, nullsFirst: false });
+    if (isLongReadParam === "true") {
+      q = q.eq("is_long_read", true).order("long_read_rank", { ascending: true, nullsFirst: false });
     } else {
       q = q.order("created_at", { ascending: false });
     }

@@ -13,32 +13,35 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { is_today } = body as { is_today?: boolean };
-    if (typeof is_today !== "boolean") {
-      return NextResponse.json({ ok: false, error: "is_today must be boolean" }, { status: 400 });
+    const { is_long_read } = body as { is_long_read?: boolean };
+    if (typeof is_long_read !== "boolean") {
+      return NextResponse.json(
+        { ok: false, error: "is_long_read must be boolean" },
+        { status: 400 }
+      );
     }
 
     const supabase = getSupabaseAdmin();
 
-    if (is_today) {
+    if (is_long_read) {
       const { data: maxRow } = await supabase
         .from("links")
-        .select("today_rank")
-        .eq("is_today", true)
-        .order("today_rank", { ascending: false })
+        .select("long_read_rank")
+        .eq("is_long_read", true)
+        .order("long_read_rank", { ascending: false })
         .limit(1)
         .maybeSingle();
-      const nextRank = ((maxRow?.today_rank ?? 0) as number) + 1;
+      const nextRank = ((maxRow?.long_read_rank ?? 0) as number) + 1;
 
       const { data, error } = await supabase
         .from("links")
-        .update({ is_today: true, today_rank: nextRank })
+        .update({ is_long_read: true, long_read_rank: nextRank })
         .eq("id", id)
         .select()
         .single();
 
       if (error) {
-        console.error("links today set error", error);
+        console.error("links long-read set error", error);
         return NextResponse.json(
           { ok: false, error: error.message || "Update failed" },
           { status: 500 }
@@ -49,13 +52,13 @@ export async function POST(
 
     const { data, error } = await supabase
       .from("links")
-      .update({ is_today: false, today_rank: null })
+      .update({ is_long_read: false, long_read_rank: null })
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error("links today unset error", error);
+      console.error("links long-read unset error", error);
       return NextResponse.json(
         { ok: false, error: error.message || "Update failed" },
         { status: 500 }
@@ -67,7 +70,7 @@ export async function POST(
     if (msg.includes("Missing required environment variable")) {
       return NextResponse.json({ ok: false, error: msg }, { status: 500 });
     }
-    console.error("POST /api/links/[id]/today", err);
+    console.error("POST /api/links/[id]/long-read", err);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }
